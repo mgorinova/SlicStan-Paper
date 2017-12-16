@@ -246,6 +246,7 @@ stansource <- tostan(model_code=code)
 writeLines(stansource)
 ```
 
+The need to statically unroll calls to user-defined functions is one of the biggest current limitations of SlicStan. It is not possible to compile a program that contains loops with run-time bounds, and Stan's output can become less readable, due to the lack of naming control for local variables. 
 
 
 # 3. Examples
@@ -402,7 +403,7 @@ model {
 }
 ```
 
-Тhe SlicStan definition of the non-centred funnel is only longer than its centred version (`real y ~ normal(0,3); real x ~ normal(0, exp(y/2)`), due to the presence of the definition of the function. The SlicStan code is also very easy to read, as it hides away the declaration of the raw parameters introduced as part of the reparameterisation. In comparison, Stan requires defining the new parameters `x_raw` and `y_raw`, moving the declarations of `x` and `y` to the `transformed parameters` block, defining them in terms of the parameters, and changing the definition of the joint density accordingly.
+The SlicStan definition of the non-centred funnel is only longer than its centred version (`real y ~ normal(0,3); real x ~ normal(0, exp(y/2)`), due to the presence of the definition of the function. The SlicStan code is also very easy to read, as it hides away the declaration of the raw parameters introduced as part of the reparameterisation. In comparison, Stan requires defining the new parameters `x_raw` and `y_raw`, moving the declarations of `x` and `y` to the `transformed parameters` block, defining them in terms of the parameters, and changing the definition of the joint density accordingly.
 
 As elaboration of calls to user-defined functions produce new variables, the SlicStan funnel model translates to a different program than the original Stan program given in the manual:
 ```{r, comment=NA, results='markup'}
