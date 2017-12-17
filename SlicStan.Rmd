@@ -7,9 +7,9 @@ header-includes:
 - \usepackage{url}
 - \usepackage{hyperref}
 output:
-  html_document: default
   pdf_document:
     latex_engine: lualatex
+  html_document: default
 link-citations: yes
 keep_tex: yes
 bibliography: stancon.bib
@@ -73,11 +73,11 @@ data <- list(mu_mu = 0,
              N = 8,
              y = c(28,  8, -3,  7, -1,  1, 18, 12))
 
-#fit <- stan(model_code=stansource, data=data)
+fit <- stan(model_code=stansource, data=data)
 
-#posterior <- as.array(fit)
-#mcmc_trace(posterior, pars = c("mu_y", "tau_y"), 
-#           facet_args = list(ncol = 1, strip.position = "left"))
+posterior <- as.array(fit)
+mcmc_trace(posterior, pars = c("mu_y", "tau_y"), 
+           facet_args = list(ncol = 1, strip.position = "left"))
 ```
 
 ## Motivation
@@ -176,7 +176,7 @@ We implement *type inference* --- the deduction of variables' level types --- fo
 * the hard constraint on the information flow direction <span style="font-variant:small-caps;">data</span> $<$ <span style="font-variant:small-caps;">model</span> $<$ <span style="font-variant:small-caps;">genquant</span> is enforced, and
 * the choice of levels is optimised with respect to the performance ordering <span style="font-variant:small-caps;">data</span> $<$ <span style="font-variant:small-caps;">genquant</span> $<$ <span style="font-variant:small-caps;">model</span>.
 
-For the simple example above, this means that we will chose `variance` to be of level <span style="font-variant:small-caps;">genquant</span> rather than level <span style="font-variant:small-caps;">model</span>, as <span style="font-variant:small-caps;">genquant</span> $<$ <span style="font-variant:small-caps;">model</span>. Another way to think about this is: variable `variance` *can* be defined as a generated quantitiy. Therefore, the target density does not depend on variable `variance` (follows from Rule 4 in the begining of the section).
+For the simple example above, this means that we will chose `variance` to be of level <span style="font-variant:small-caps;">genquant</span> rather than level <span style="font-variant:small-caps;">model</span>, as <span style="font-variant:small-caps;">genquant</span> $<$ <span style="font-variant:small-caps;">model</span>. Another way to think about this is: variable `variance` *can* be defined as a generated quantity. Therefore, the target density does not depend on variable `variance` (follows from Rule 4 in the beginning of the section).
 
 
 Having inferred a level type for each program variable, we can use the following rules to determine what block of a Stan program a declaration of a variable $x$, and statements associated with it, should belong to:
@@ -425,9 +425,9 @@ Finally, we notice the names of the new parameters in the translated code --- `x
 
 # 4. Conclusion 
 
-We present SlicStan --- a blockless Stan-like probabilistic programming language, which supports user-defined functions that can declare new model parameters. 
+We present SlicStan --- a blockless Stan-like probabilistic programming language, which supports user-defined functions that can declare new model parameters. SlicStan successfully applies static analysis to allow Stan programs to be more concise, and easier to write and modify. This opens a range of possibilities for future work that uses programming language techniques to aid probabilistic programming and inference. 
 
-SlicStan successfully applies static analysis to allow Stan programs to be more concise, and easier to write and modify. This opens a range of possibilities for future work that uses programming language techniques to aid probabilistic programming and inference. For example, a future version of SlicStan could support vectorisation of user-defined functions, which would allow for models to be specified even more compactly. The full ten-dimensional version of Neal's funnel, can then be simply written as:
+For example, a future version of SlicStan could support vectorisation of user-defined functions, which would allow for models to be specified even more compactly. The full ten-dimensional version of Neal's funnel, can then be simply written as:
 ```{Stan}
 def non_centred_normal(real m, real s) {
     real x_raw ~ normal(0, 1);
@@ -438,7 +438,7 @@ real y = non_centred_normal(0, 3);
 vector[9] x = non_centred_normal(0, exp(y/2));
 ```
 
-Another possible direction of work is to extend the type system so that certain constraints on the range that parameters can have could be automatically deduced using type inference. For example, consider the following truncated Gaussian model:
+Another possible direction of work is to extend the type system so that certain constraints on the range that parameters can have could be automatically deduced using type inference. For example, consider the following truncated Gaussian model (Section 12.2 of the Reference Manual):
 ```{Stan}
 real mu;
 real sigma;
@@ -448,7 +448,8 @@ data real U;
 data vector[N] y ~ normal(mu, sigma) T[,U];
 ```
 
-The data length, `N` must be non-negative, as it is used to define the size of a vector. The variable `sigma` must be positive, as it is used as the standard deviation in `normal(mu, sigma) T[,U]`. Finally, the datapoints `y` must be each smaller than or equal to `U`, as we specified that they follow a truncated normal distribution. Implementing those and other rules within a type system, can allow us to automatically obtain the follwing Stan model, which is equivalent to the truncated normal specified in Section 12.2 of the Reference Manual:
+The data length, `N` must be non-negative, as it is used to define the size of a vector. The variable `sigma` must be positive, as it is used as the standard deviation in `normal(mu, sigma) T[,U]`. Finally, the datapoints `y` must be smaller than or equal to `U`, as we specified that they follow a truncated normal distribution. 
+Extending SlicStan's type system to support constraints, could allow us to automatically transform the SlicStan program above to the following Stan code: 
 ```{Stan}
 data {
   int<lower=0> N;
@@ -464,7 +465,7 @@ model {
 }
 ```
 
-Semantic-preserving transformations could be applied, depending on the specific program, to compile to a better optimised and better behaved sampling algorithm. 
+Finally, semantic-preserving transformations could be applied, depending on the specific program, to compile to a better optimised and better behaved sampling algorithm. For example, loops could be collapsed to vectorised statements where possible, and common subexpressions could be aggregated automatically. 
 
 
 
